@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>一級建築施工管理技士 受験対策 — アクセス</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--primary:#1e40af;--primary-light:#3b82f6;--accent:#f59e0b;--error:#ef4444}
+body{
+  font-family:'Hiragino Sans','Meiryo',sans-serif;
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(150deg,#0f172a 0%,#1e3a5f 50%,#1e40af 100%);
+  padding:24px;
+}
+.card{
+  background:#fff;border-radius:24px;padding:48px 40px;
+  width:100%;max-width:420px;
+  box-shadow:0 24px 80px rgba(0,0,0,.4);
+  animation:up .4s ease;
+}
+@keyframes up{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+.logo{text-align:center;margin-bottom:32px}
+.logo-icon{font-size:3rem;display:block;margin-bottom:12px}
+.logo h1{font-size:1.1rem;font-weight:800;color:var(--primary);line-height:1.4}
+.logo p{font-size:.82rem;color:#64748b;margin-top:6px}
+.badge{
+  display:inline-block;background:rgba(245,158,11,.15);color:#b45309;
+  font-size:.75rem;font-weight:700;padding:3px 12px;border-radius:50px;
+  margin-bottom:28px;
+}
+label{display:block;font-size:.85rem;font-weight:700;color:#374151;margin-bottom:8px}
+.input-wrap{position:relative;margin-bottom:8px}
+input[type=text]{
+  width:100%;padding:14px 16px;border:2px solid #e2e8f0;border-radius:12px;
+  font-size:1rem;font-family:inherit;outline:none;transition:border-color .2s;
+  letter-spacing:.1em;text-align:center;font-weight:700;
+}
+input[type=text]:focus{border-color:var(--primary-light)}
+input[type=text].err{border-color:var(--error);background:#fff5f5}
+.hint{font-size:.78rem;color:#94a3b8;margin-bottom:24px;text-align:center}
+button[type=submit]{
+  width:100%;padding:16px;border:none;border-radius:12px;
+  background:linear-gradient(135deg,var(--primary),var(--primary-light));
+  color:#fff;font-size:1rem;font-weight:800;font-family:inherit;
+  cursor:pointer;transition:transform .2s,box-shadow .2s;
+  box-shadow:0 4px 20px rgba(30,64,175,.35);
+}
+button[type=submit]:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(30,64,175,.45)}
+button[type=submit]:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.error-msg{
+  display:none;background:#fff5f5;border:1px solid #fca5a5;border-radius:10px;
+  padding:12px 16px;font-size:.88rem;color:var(--error);
+  text-align:center;margin-top:16px;font-weight:600;
+}
+.error-msg.show{display:block}
+.footer-note{text-align:center;margin-top:28px;font-size:.78rem;color:#94a3b8;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <span class="logo-icon">🏗️</span>
+    <h1>一級建築施工管理技士<br>第一次検定 対策アプリ</h1>
+    <p>スキマ時間で合格を目指す</p>
+  </div>
+  <div style="text-align:center;margin-bottom:24px">
+    <span class="badge">🔒 β版モニター限定</span>
+  </div>
+  <form id="loginForm" onsubmit="doLogin(event)">
+    <label for="code">アクセスコード</label>
+    <div class="input-wrap">
+      <input type="text" id="code" name="code" placeholder="SEKO-XXXX-XXXX"
+        autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="20">
+    </div>
+    <p class="hint">招待メールに記載のコードを入力してください</p>
+    <button type="submit" id="submitBtn">アクセスする →</button>
+    <div class="error-msg" id="errMsg">❌ コードが正しくありません。再度ご確認ください。</div>
+  </form>
+  <p class="footer-note">
+    このアプリはβ版モニターテスト中です。<br>
+    ご意見・ご要望はアプリ内のフィードバックボタンからお寄せください。
+  </p>
+</div>
+<script>
+async function doLogin(e) {
+  e.preventDefault();
+  const code  = document.getElementById('code').value.trim().toUpperCase();
+  const input = document.getElementById('code');
+  const btn   = document.getElementById('submitBtn');
+  const err   = document.getElementById('errMsg');
+  if (!code) { input.classList.add('err'); return; }
+  btn.disabled = true;
+  btn.textContent = '確認中...';
+  err.classList.remove('show');
+  input.classList.remove('err');
+  try {
+    const res  = await fetch('/api/auth/login', {
+      method : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body   : JSON.stringify({ code }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      btn.textContent = '✅ 認証成功！';
+      setTimeout(() => { window.location.href = '/'; }, 600);
+    } else {
+      input.classList.add('err');
+      err.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'アクセスする →';
+    }
+  } catch {
+    err.textContent = '⚠️ 通信エラーが発生しました。再度お試しください。';
+    err.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = 'アクセスする →';
+  }
+}
+document.getElementById('code').addEventListener('input', function() {
+  this.value = this.value.toUpperCase();
+  this.classList.remove('err');
+  document.getElementById('errMsg').classList.remove('show');
+});
+</script>
+</body>
+</html>

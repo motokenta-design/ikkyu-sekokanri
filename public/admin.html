@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理画面 – 一級建築施工管理技士受験対策</title>
+<style>
+  :root {
+    --primary: #c2410c;
+    --primary-hover: #9a3412;
+    --danger: #dc2626;
+    --danger-hover: #b91c1c;
+    --success: #16a34a;
+    --bg: #fafaf9;
+    --card: #ffffff;
+    --border: #e7e5e4;
+    --text: #1c1917;
+    --muted: #78716c;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', 'Hiragino Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  header {
+    background: var(--primary);
+    color: #fff;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
+  }
+  header h1 { font-size: 1.2rem; font-weight: 700; }
+  header a { color: rgba(255,255,255,.8); text-decoration: none; font-size: .9rem; margin-left: auto; }
+  header a:hover { color: #fff; }
+
+  .tabs {
+    display: flex;
+    background: var(--card);
+    border-bottom: 2px solid var(--border);
+    padding: 0 24px;
+    overflow-x: auto;
+  }
+  .tab-btn {
+    padding: 14px 24px;
+    border: none;
+    background: none;
+    font-size: .95rem;
+    cursor: pointer;
+    color: var(--muted);
+    font-weight: 500;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: all .2s;
+    white-space: nowrap;
+  }
+  .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+  .tab-btn:hover:not(.active) { color: var(--text); }
+
+  main { max-width: 960px; margin: 0 auto; padding: 28px 20px; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.05);
+  }
+  .card h2 { font-size: 1.05rem; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .card h2 .icon { font-size: 1.2rem; }
+
+  .form-group { margin-bottom: 16px; }
+  label { display: block; font-size: .85rem; font-weight: 600; margin-bottom: 6px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  input[type=text], select, textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: .95rem;
+    color: var(--text);
+    background: #fff;
+    transition: border .2s;
+    font-family: inherit;
+  }
+  input[type=text]:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
+  textarea { min-height: 80px; resize: vertical; }
+
+  .drop-zone {
+    border: 2.5px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    background: #fafaf9;
+    position: relative;
+  }
+  .drop-zone.dragover { border-color: var(--primary); background: #fff7ed; }
+  .drop-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .drop-zone .dz-icon { font-size: 2.5rem; margin-bottom: 8px; }
+  .drop-zone p { color: var(--muted); font-size: .95rem; }
+  .drop-zone .dz-file { color: var(--primary); font-weight: 600; margin-top: 4px; font-size: .9rem; }
+
+  .btn {
+    padding: 10px 22px;
+    border-radius: 8px;
+    border: none;
+    font-size: .95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+  .btn-danger  { background: var(--danger);  color: #fff; }
+  .btn-danger:hover:not(:disabled)  { background: var(--danger-hover); }
+  .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
+  .btn-outline:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-sm { padding: 6px 14px; font-size: .82rem; }
+
+  .range-row { display: flex; align-items: center; gap: 12px; }
+  input[type=range] { flex: 1; accent-color: var(--primary); }
+  .range-val { min-width: 32px; text-align: right; font-weight: 700; color: var(--primary); }
+
+  .progress-box {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-top: 16px;
+    font-size: .9rem;
+    display: none;
+  }
+  .progress-box.visible { display: block; }
+  .progress-bar-wrap { background: var(--border); border-radius: 99px; height: 8px; margin-top: 8px; }
+  .progress-bar { height: 8px; border-radius: 99px; background: var(--primary); transition: width .4s; }
+
+  .alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-top: 14px;
+    font-size: .9rem;
+    display: none;
+  }
+  .alert.visible { display: block; }
+  .alert-success { background: #f0fdf4; border: 1px solid #86efac; color: var(--success); }
+  .alert-error   { background: #fef2f2; border: 1px solid #fca5a5; color: var(--danger); }
+
+  .q-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .q-controls select, .q-controls input { flex: 1; min-width: 140px; max-width: 220px; }
+
+  .stats-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .stat-badge {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: .85rem;
+  }
+  .stat-badge strong { display: block; font-size: 1.2rem; color: var(--primary); }
+
+  .q-list { display: flex; flex-direction: column; gap: 8px; }
+  .q-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .q-item:hover { border-color: #d6d3d1; }
+  .q-item input[type=checkbox] { margin-top: 3px; accent-color: var(--primary); width: 16px; height: 16px; flex-shrink: 0; }
+  .q-item-body { flex: 1; min-width: 0; }
+  .q-item-meta {
+    font-size: .75rem;
+    color: var(--muted);
+    margin-bottom: 4px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 99px;
+    font-size: .72rem;
+    font-weight: 600;
+  }
+  .badge-建築学     { background:#dbeafe; color:#1e40af; }
+  .badge-共通工学   { background:#d1fae5; color:#065f46; }
+  .badge-施工管理法 { background:#ede9fe; color:#4c1d95; }
+  .badge-法規       { background:#fef3c7; color:#92400e; }
+  .badge-施工       { background:#fee2e2; color:#991b1b; }
+  .badge-AI         { background:#f3f4f6; color:#374151; }
+  .badge-custom     { background:#fdf4ff; color:#7e22ce; }
+
+  .q-item-text { font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .q-item-actions { flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+
+  .img-thumb {
+    width: 64px; height: 48px; object-fit: cover;
+    border-radius: 4px; border: 1px solid var(--border);
+    cursor: pointer; display: block; margin-bottom: 4px;
+  }
+  .img-thumb-svg {
+    width: 64px; height: 48px; border-radius: 4px;
+    border: 1px solid var(--border); background: #f5f5f4;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .65rem; color: var(--muted); margin-bottom: 4px;
+    cursor: pointer;
+  }
+  .img-upload-label {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 5px 10px; border-radius: 6px; font-size: .78rem;
+    font-weight: 600; cursor: pointer; border: 1.5px solid var(--border);
+    color: var(--text); background: #fff; transition: all .15s;
+    white-space: nowrap;
+  }
+  .img-upload-label:hover { border-color: var(--primary); color: var(--primary); }
+  .img-upload-input { display: none; }
+
+  .pagination {
+    display: flex; gap: 8px; align-items: center; margin-top: 16px; justify-content: center; flex-wrap: wrap;
+  }
+  .pagination button {
+    padding: 6px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+    font-size: .88rem;
+    transition: all .15s;
+  }
+  .pagination button:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+  .pagination button:disabled { opacity: .4; cursor: default; }
+  .pagination .page-info { color: var(--muted); font-size: .88rem; padding: 6px 4px; }
+
+  .bulk-bar {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-radius: 8px;
+    padding: 10px 16px;
+    display: none;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .bulk-bar.visible { display: flex; }
+  .bulk-bar span { font-size: .9rem; flex: 1; }
+
+  .q-preview { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin-top: 8px; font-size: .88rem; display: none; }
+  .q-preview.visible { display: block; }
+  .q-preview-item { border-bottom: 1px solid var(--border); padding: 10px 0; }
+  .q-preview-item:last-child { border-bottom: none; }
+  .q-preview-item .q-no { font-weight: 700; color: var(--primary); margin-bottom: 4px; }
+  .q-preview-item .q-text { margin-bottom: 6px; }
+  .q-preview-item .q-choices { margin-left: 16px; color: var(--muted); font-size: .83rem; }
+  .q-preview-item .q-ans { font-size: .83rem; color: var(--success); margin-top: 4px; font-weight: 600; }
+
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.5); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty-state { text-align: center; padding: 40px; color: var(--muted); font-size: .95rem; }
+
+  .pdf-status-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+  .pdf-status-table th { background: var(--bg); padding: 8px 12px; text-align: left; font-weight: 600; color: var(--muted); border-bottom: 2px solid var(--border); }
+  .pdf-status-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .pdf-status-table tr:hover td { background: #fafaf9; }
+  .count-low { color: var(--danger); font-weight: 700; }
+  .count-ok  { color: var(--success); font-weight: 600; }
+  .reprocess-btn { padding: 4px 12px; font-size: .8rem; }
+
+  .svg-modal {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6);
+    align-items: center; justify-content: center; z-index: 1000;
+  }
+  .svg-modal-inner {
+    background: #fff; border-radius: var(--radius); padding: 24px;
+    max-width: 600px; width: 90%; position: relative;
+  }
+  .svg-modal-inner svg { width: 100%; height: auto; }
+  .svg-modal-close {
+    position: absolute; top: 12px; right: 16px; font-size: 1.4rem;
+    cursor: pointer; color: var(--muted); background: none; border: none;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span style="font-size:1.5rem">🏗️</span>
+  <h1>管理画面 – 一級建築施工管理技士受験対策</h1>
+  <a href="/">← 学習画面へ</a>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('generate')">🤖 AI問題生成</button>
+  <button class="tab-btn" onclick="switchTab('figures')">📐 図SVG生成</button>
+  <button class="tab-btn" onclick="switchTab('manage')">📋 問題管理</button>
+</div>
+
+<!-- SVGモーダル -->
+<div class="svg-modal" id="svgModal" onclick="if(event.target===this)this.style.display='none'">
+  <div class="svg-modal-inner">
+    <button class="svg-modal-close" onclick="document.getElementById('svgModal').style.display='none'">✕</button>
+    <div id="svgContainer"></div>
+  </div>
+</div>
+
+<main>
+
+  <!-- ════════════════════ TAB 1: AI Generate ══════════════════════════════ -->
+  <div id="tab-generate" class="tab-panel active">
+    <div class="card">
+      <h2><span class="icon">🤖</span> AIオリジナル問題自動生成</h2>
+      <p style="color:var(--muted);font-size:.9rem;margin-bottom:20px">
+        科目とテーマを指定すると、AIが<strong>著作権フリーのオリジナル問題</strong>を自動生成してデータベースに追加します。<br>
+        試験実施機関（一般財団法人建設業振興基金）の過去問・著作物は一切使用しません。
+      </p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group">
+          <label>科目 *</label>
+          <select id="genCategory">
+            <option value="">選択してください</option>
+            <option value="建築学">建築学</option>
+            <option value="共通工学">共通工学</option>
+            <option value="施工管理法">施工管理法</option>
+            <option value="法規">法規</option>
+            <option value="施工">施工</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>テーマ（任意）</label>
+          <input type="text" id="genTopic" placeholder="例：型枠工事、建設業法、工程管理">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>生成問題数</label>
+        <div class="range-row">
+          <input type="range" id="genCount" min="1" max="20" value="5" oninput="document.getElementById('genCountVal').textContent=this.value">
+          <span class="range-val" id="genCountVal">5</span>問
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="generateBtn" onclick="generateQuestions()">
+        <span id="generateBtnText">⚡ 問題を生成する</span>
+      </button>
+
+      <div class="progress-box" id="generateProgress">
+        <div id="generateProgressText">Gemini 2.5 Proが問題を生成中です…</div>
+        <div class="progress-bar-wrap"><div class="progress-bar" id="generateBar" style="width:0%"></div></div>
+      </div>
+
+      <div class="alert alert-success" id="generateSuccess"></div>
+      <div class="alert alert-error"   id="generateError"></div>
+    </div>
+
+    <div class="card" id="generateResultCard" style="display:none">
+      <h2><span class="icon">📝</span> 生成された問題プレビュー</h2>
+      <div class="q-preview visible" id="generatePreview"></div>
+    </div>
+
+    <!-- 一括生成 -->
+    <div class="card" style="border:2px solid #7c3aed">
+      <h2><span class="icon">⚡</span> 全科目・一括AIオリジナル問題生成</h2>
+      <p style="color:var(--muted);font-size:.9rem;margin-bottom:16px">
+        目標：5,000問（建築学1,000・共通工学500・施工管理法1,000・法規1,000・施工1,000）<br>
+        <strong>著作権フリー</strong>のオリジナル問題をカテゴリ別・テーマ別に一括生成します。
+      </p>
+      <div id="bulkTargets" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:16px"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-primary" id="bulkStartBtn" onclick="startBulkGeneration()" style="background:#7c3aed">
+          ⚡ 一括生成開始
+        </button>
+        <button class="btn btn-outline" onclick="loadBulkTargets()">🔄 問題数を確認</button>
+      </div>
+      <div class="progress-box" id="bulkProgress" style="display:none;margin-top:16px">
+        <div id="bulkProgressText" style="font-size:.9rem;margin-bottom:8px">準備中…</div>
+        <div class="progress-bar-wrap"><div class="progress-bar" id="bulkBar" style="width:0%"></div></div>
+        <div style="font-size:.85rem;color:var(--muted);margin-top:4px" id="bulkPct">0%</div>
+      </div>
+      <div id="bulkResults" style="margin-top:12px;display:none">
+        <div class="stats-row" id="bulkResultStats"></div>
+      </div>
+      <div id="bulkLog" style="max-height:200px;overflow-y:auto;font-size:.8rem;color:var(--muted);margin-top:8px;background:var(--surface);border-radius:6px;padding:8px;display:none"></div>
+      <div class="alert alert-success" id="bulkSuccess" style="display:none;margin-top:12px"></div>
+      <div class="alert alert-error"   id="bulkError"   style="display:none;margin-top:12px"></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════ TAB 3: Figure SVG ═══════════════════════════════ -->
+  <div id="tab-figures" class="tab-panel" style="display:none">
+    <div class="card">
+      <h2><span class="icon">📐</span> 図・表・グラフのSVG自動生成</h2>
+      <p style="color:var(--muted);font-size:.9rem;line-height:1.7;margin-bottom:16px">
+        <strong>図・表・グラフがある問題</strong>に対してGeminiがSVGを自動生成します。<br>
+        生成されたSVGは学習画面の問題文下に自動表示されます。
+      </p>
+
+      <div class="stats-row" id="figureStats">
+        <div class="stat-badge"><strong id="figStatTotal">–</strong>図あり問題</div>
+        <div class="stat-badge" style="background:#f0fdf4"><strong id="figStatDone" style="color:#16a34a">–</strong>SVG生成済</div>
+        <div class="stat-badge" style="background:#fef9c3"><strong id="figStatPending" style="color:#ca8a04">–</strong>未生成</div>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+        <button class="btn btn-outline" onclick="loadFigureStats()">🔄 統計を更新</button>
+      </div>
+
+      <div class="alert alert-success" id="batchSvgSuccess" style="display:none;margin-top:12px"></div>
+      <div class="alert alert-error"   id="batchSvgError"   style="display:none;margin-top:12px"></div>
+    </div>
+
+    <div class="card" id="figureListCard" style="display:none">
+      <h2><span class="icon">📋</span> 図あり問題一覧（未生成）</h2>
+      <div id="figureList"></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════ TAB 4: Question Manage ══════════════════════════ -->
+  <div id="tab-manage" class="tab-panel">
+    <div class="card">
+      <h2><span class="icon">📋</span> 問題一覧・管理</h2>
+
+      <div class="stats-row" id="statsRow">
+        <div class="stat-badge"><strong id="statTotal">–</strong>総問題数</div>
+        <div class="stat-badge"><strong id="statAI">–</strong>AIオリジナル</div>
+      </div>
+
+      <div class="q-controls">
+        <select id="filterCategory" onchange="loadQuestions()">
+          <option value="all">全科目</option>
+          <option value="建築学">建築学</option>
+          <option value="共通工学">共通工学</option>
+          <option value="施工管理法">施工管理法</option>
+          <option value="法規">法規</option>
+          <option value="施工">施工</option>
+        </select>
+        <select id="filterSource" onchange="loadQuestions()">
+          <option value="">全ソース</option>
+          <option value="custom_">カスタムPDF</option>
+          <option value="ai_">AI生成</option>
+        </select>
+        <input type="text" id="filterSearch" placeholder="問題文で検索…" oninput="debounceSearch()">
+        <button class="btn btn-outline" onclick="loadQuestions()">🔄 更新</button>
+      </div>
+
+      <div class="bulk-bar" id="bulkBar">
+        <span id="bulkCount">0件選択中</span>
+        <button class="btn btn-danger btn-sm" onclick="bulkDelete()">🗑 選択削除</button>
+        <button class="btn btn-outline btn-sm" onclick="clearSelection()">✕ 選択解除</button>
+      </div>
+
+      <div class="q-list" id="qList">
+        <div class="empty-state">読み込み中…</div>
+      </div>
+
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </div>
+
+
+</main>
+
+<script>
+// ────────────────────────────────────────────────────────────────
+// Tab switching
+// ────────────────────────────────────────────────────────────────
+function switchTab(name) {
+  const tabs = ['generate','figures','manage'];
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', tabs[i] === name);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => { p.style.display = 'none'; p.classList.remove('active'); });
+  const panel = document.getElementById(`tab-${name}`);
+  if (panel) { panel.style.display = 'block'; panel.classList.add('active'); }
+  if (name === 'manage')  { currentPage = 1; loadQuestions(); }
+  if (name === 'figures') loadFigureStats();
+}
+
+
+// ────────────────────────────────────────────────────────────────
+// AI Generate
+// ────────────────────────────────────────────────────────────────
+async function generateQuestions() {
+  const category = document.getElementById('genCategory').value;
+  if (!category) { alert('科目を選択してください'); return; }
+
+  const btn = document.getElementById('generateBtn');
+  const btnText = document.getElementById('generateBtnText');
+  btn.disabled = true;
+  btnText.innerHTML = '<span class="spinner"></span> 生成中…';
+
+  const progressBox = document.getElementById('generateProgress');
+  const bar = document.getElementById('generateBar');
+  progressBox.classList.add('visible');
+  hideAlerts('generate');
+
+  let pct = 0;
+  const timer = setInterval(() => { pct = Math.min(pct + 1.5, 88); bar.style.width = pct + '%'; }, 1000);
+
+  try {
+    const res = await fetch('/api/admin/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        category,
+        topic: document.getElementById('genTopic').value.trim(),
+        count: parseInt(document.getElementById('genCount').value, 10),
+      }),
+    });
+    const data = await res.json();
+    clearInterval(timer); bar.style.width = '100%';
+    if (!res.ok) throw new Error(data.error || '生成失敗');
+    showAlert('generate', 'success', `✅ ${data.added}問を生成・追加しました（総問題数：${data.total}問）`);
+    showPreview('generatePreview', data.questions);
+    document.getElementById('generateResultCard').style.display = 'block';
+  } catch (e) {
+    clearInterval(timer);
+    showAlert('generate', 'error', `❌ エラー：${e.message}`);
+  } finally {
+    progressBox.classList.remove('visible');
+    bar.style.width = '0%';
+    btn.disabled = false;
+    btnText.textContent = '⚡ 問題を生成する';
+  }
+}
+
+// ────────────────────────────────────────────────────────────────
+// Bulk generation
+// ────────────────────────────────────────────────────────────────
+let bulkEs = null;
+
+async function loadBulkTargets() {
+  const targets = { '建築学':1000, '共通工学':500, '施工管理法':1000, '法規':1000, '施工':1000 };
+  const grid = document.getElementById('bulkTargets');
+  try {
+    const sr = await fetch('/api/admin/generate-batch/status');
+    const s = await sr.json();
+    grid.innerHTML = Object.entries(targets).map(([c, tgt]) => {
+      const cur = s.catProgress[c] || 0;
+      const pct = Math.min(100, Math.round(cur/tgt*100));
+      return `
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:.85rem;font-weight:600">${c}</div>
+          <div style="font-size:1.2rem;font-weight:800;color:#7c3aed">${cur}<span style="font-size:.75rem;color:var(--muted)">/${tgt}</span></div>
+          <div style="height:4px;background:#e5e7eb;border-radius:2px;margin-top:4px"><div style="height:4px;background:#7c3aed;border-radius:2px;width:${pct}%"></div></div>
+        </div>`;
+    }).join('');
+  } catch {
+    grid.innerHTML = Object.keys(targets).map(c =>
+      `<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center"><div style="font-size:.85rem;font-weight:600">${c}</div><div style="color:var(--muted);font-size:.8rem">–</div></div>`
+    ).join('');
+  }
+}
+
+async function startBulkGeneration() {
+  if (!confirm('全科目の一括AI問題生成を開始しますか？\n（数十分かかる場合があります）')) return;
+
+  document.getElementById('bulkStartBtn').disabled = true;
+  document.getElementById('bulkProgress').style.display = 'block';
+  document.getElementById('bulkLog').style.display = 'block';
+  document.getElementById('bulkSuccess').style.display = 'none';
+  document.getElementById('bulkError').style.display = 'none';
+  document.getElementById('bulkResults').style.display = 'none';
+
+  const r = await fetch('/api/admin/generate-batch/start', { method: 'POST' });
+  const d = await r.json();
+  if (!r.ok) {
+    document.getElementById('bulkError').textContent = d.error;
+    document.getElementById('bulkError').style.display = 'block';
+    document.getElementById('bulkStartBtn').disabled = false;
+    return;
+  }
+
+  // Poll status every 5 seconds
+  const log = document.getElementById('bulkLog');
+  const bar = document.getElementById('bulkBar');
+  const pct = document.getElementById('bulkPct');
+  const txt = document.getElementById('bulkProgressText');
+
+  function addLog(msg, color) {
+    const p = document.createElement('div');
+    p.style.color = color || '';
+    p.textContent = new Date().toLocaleTimeString('ja-JP') + ' ' + msg;
+    log.appendChild(p);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  async function pollStatus() {
+    try {
+      const sr = await fetch('/api/admin/generate-batch/status');
+      const s = await sr.json();
+      txt.textContent = s.category ? `${s.category}「${s.topic}」生成中...` : '処理中...';
+      const totalTarget = Object.values(s.catTargets).reduce((a,b)=>a+b,0);
+      const totalDone   = Object.values(s.catProgress).reduce((a,b)=>a+b,0);
+      const p = totalTarget ? Math.round((totalDone / totalTarget) * 100) : 0;
+      bar.style.width = p + '%';
+      pct.textContent = `${totalDone} / ${totalTarget}問 (${p}%)`;
+      if (s.log && s.log.length) {
+        const lastLog = s.log[s.log.length - 1];
+        addLog(lastLog);
+      }
+      if (s.running) {
+        setTimeout(pollStatus, 5000);
+      } else {
+        bar.style.width = '100%';
+        pct.textContent = `完了！合計${s.total}問`;
+        txt.textContent = `✅ 一括生成完了！合計${s.total}問`;
+        document.getElementById('bulkSuccess').textContent = `✅ 一括生成完了！合計${s.total}問`;
+        document.getElementById('bulkSuccess').style.display = 'block';
+        document.getElementById('bulkStartBtn').disabled = false;
+        renderBulkResults(s.catProgress);
+        loadBulkTargets();
+      }
+    } catch(e) {
+      addLog('接続エラー: ' + e.message, '#dc2626');
+      setTimeout(pollStatus, 8000);
+    }
+  }
+  setTimeout(pollStatus, 3000);
+}
+
+function renderBulkResults(results) {
+  const el = document.getElementById('bulkResultStats');
+  const box = document.getElementById('bulkResults');
+  if (!results || !Object.keys(results).length) return;
+  box.style.display = 'block';
+  el.innerHTML = Object.entries(results).map(([cat, cnt]) =>
+    `<div class="stat-badge"><strong>${cnt}</strong>${cat}</div>`).join('');
+}
+
+// ────────────────────────────────────────────────────────────────
+// Question list
+// ────────────────────────────────────────────────────────────────
+let currentPage = 1;
+const PAGE_SIZE = 30;
+let selectedIds = new Set();
+let totalItems = 0;
+let qDataCache = {};
+
+async function loadQuestions() {
+  const category = document.getElementById('filterCategory').value;
+  const source   = document.getElementById('filterSource').value;
+  const search   = document.getElementById('filterSearch').value;
+
+  const params = new URLSearchParams({ page: currentPage, limit: PAGE_SIZE });
+  if (category !== 'all') params.set('category', category);
+  if (source)   params.set('source', source);
+  if (search)   params.set('search', search);
+
+  const res  = await fetch(`/api/admin/questions?${params}`);
+  const data = await res.json();
+  totalItems = data.total;
+  renderList(data.items);
+  renderPagination(data.total);
+  updateStats();
+}
+
+async function updateStats() {
+  const res = await fetch('/api/admin/questions?limit=99999');
+  const data = await res.json();
+  document.getElementById('statTotal').textContent  = data.total;
+  const items = data.items || [];
+  document.getElementById('statAI').textContent = items.filter(q => (q.id||'').startsWith('ai_')).length;
+}
+
+function renderList(items) {
+  items.forEach(q => { qDataCache[q.id] = q; });
+  const container = document.getElementById('qList');
+  if (items.length === 0) {
+    container.innerHTML = '<div class="empty-state">📭 該当する問題がありません</div>';
+    return;
+  }
+  container.innerHTML = items.map(q => {
+    const isCustom = (q.id || '').startsWith('custom_');
+    const isAI     = (q.id || '').startsWith('ai_');
+    const catClass = q.category ? `badge-${q.category}` : '';
+    const typeBadge = isAI ? '<span class="badge badge-AI">AI生成</span>'
+                    : isCustom ? '<span class="badge badge-custom">カスタム</span>' : '';
+    const checked = selectedIds.has(q.id) ? 'checked' : '';
+    const src = q.source || q.sourceKey || (q.year > 0 ? `${q.year}年度` : '不明');
+
+    return `
+    <div class="q-item" id="qitem-${encodeId(q.id)}">
+      <input type="checkbox" ${checked} onchange="toggleSelect('${escId(q.id)}', this.checked)">
+      <div class="q-item-body">
+        <div class="q-item-meta">
+          <span class="badge ${catClass}">${q.category}</span>
+          ${typeBadge}
+          <span>No.${q.no} ${q.year > 0 ? q.year+'年' : ''}</span>
+          <span title="${src}">📂 ${truncate(src, 25)}</span>
+        </div>
+        <div class="q-item-text">${escHtml(q.question)}</div>
+      </div>
+      <div class="q-item-actions">
+        ${q.image
+          ? `<img src="${q.image}" class="img-thumb" title="画像あり" onclick="window.open('${q.image}','_blank')">`
+          : q.image_svg
+            ? `<div class="img-thumb-svg" title="SVG図あり" onclick="showSvgModal('${escId(q.id)}')">📐 SVG</div>`
+            : ''}
+        <label class="img-upload-label" title="画像をアップロード">
+          🖼 ${q.image || q.image_svg ? '差替' : '画像追加'}
+          <input class="img-upload-input" type="file" accept="image/*"
+            onchange="uploadQuestionImage('${escId(q.id)}', this)">
+        </label>
+        ${(q.has_figure !== false && !q.image && !q.image_svg)
+          ? `<button class="btn btn-outline btn-sm" onclick="generateSvg('${escId(q.id)}', this)">📐 SVG生成</button>`
+          : ''}
+        ${q.image || q.image_svg
+          ? `<button class="btn btn-outline btn-sm" onclick="deleteQuestionImage('${escId(q.id)}')">🗑 図削除</button>`
+          : ''}
+        <button class="btn btn-danger btn-sm" onclick="deleteQuestion('${escId(q.id)}')">🗑 問題削除</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderPagination(total) {
+  const pages = Math.ceil(total / PAGE_SIZE);
+  const pg = document.getElementById('pagination');
+  if (pages <= 1) { pg.innerHTML = ''; return; }
+  let html = `<button onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>◀</button>`;
+  html += `<span class="page-info">${currentPage} / ${pages} ページ（${total}件）</span>`;
+  html += `<button onclick="goPage(${currentPage+1})" ${currentPage>=pages?'disabled':''}>▶</button>`;
+  pg.innerHTML = html;
+}
+
+function goPage(p) { currentPage = p; loadQuestions(); }
+
+function toggleSelect(id, checked) {
+  if (checked) selectedIds.add(id);
+  else selectedIds.delete(id);
+  updateBulkBar();
+}
+
+function clearSelection() { selectedIds.clear(); updateBulkBar(); loadQuestions(); }
+
+function updateBulkBar() {
+  const bar = document.getElementById('bulkBar');
+  bar.classList.toggle('visible', selectedIds.size > 0);
+  document.getElementById('bulkCount').textContent = `${selectedIds.size}件選択中`;
+}
+
+// ────────────────────────────────────────────────────────────────
+// Image upload / delete
+// ────────────────────────────────────────────────────────────────
+async function uploadQuestionImage(id, input) {
+  if (!input.files[0]) return;
+  const fd = new FormData();
+  fd.append('image', input.files[0]);
+  try {
+    const res = await fetch(`/api/admin/questions/${encodeURIComponent(id)}/image`, { method: 'POST', body: fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'アップロード失敗');
+    alert('✅ 画像を保存しました');
+    loadQuestions();
+  } catch (e) { alert(`❌ エラー：${e.message}`); }
+}
+
+async function deleteQuestionImage(id) {
+  if (!confirm('この問題の図・画像を削除しますか？')) return;
+  const res = await fetch(`/api/admin/questions/${encodeURIComponent(id)}/image`, { method: 'DELETE' });
+  if (res.ok) loadQuestions();
+  else { const d = await res.json(); alert('削除失敗: ' + (d.error || '')); }
+}
+
+function showSvgModal(id) {
+  const q = qDataCache[id];
+  if (!q || !q.image_svg) return;
+  document.getElementById('svgContainer').innerHTML = q.image_svg;
+  const svgEl = document.querySelector('#svgContainer svg');
+  if (svgEl) { svgEl.removeAttribute('width'); svgEl.removeAttribute('height'); svgEl.style.cssText = 'max-width:100%;width:100%;height:auto;display:block;'; }
+  document.getElementById('svgModal').style.display = 'flex';
+}
+
+async function deleteQuestion(id) {
+  if (!confirm(`この問題を削除しますか？\nID: ${id}`)) return;
+  const res  = await fetch(`/api/admin/questions/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  const data = await res.json();
+  if (res.ok) loadQuestions();
+  else alert('削除失敗: ' + (data.error || ''));
+}
+
+async function bulkDelete() {
+  const ids = [...selectedIds];
+  if (!confirm(`${ids.length}件の問題を削除しますか？この操作は取り消せません。`)) return;
+  const res  = await fetch('/api/admin/questions/delete-bulk', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids }),
+  });
+  if (res.ok) { selectedIds.clear(); updateBulkBar(); loadQuestions(); }
+  else { const d = await res.json(); alert('削除失敗: ' + (d.error || '')); }
+}
+
+// ────────────────────────────────────────────────────────────────
+// On-demand SVG generation
+// ────────────────────────────────────────────────────────────────
+async function generateSvg(id, btn) {
+  btn.disabled = true;
+  btn.textContent = '生成中…';
+  try {
+    const res  = await fetch(`/api/admin/questions/${encodeURIComponent(id)}/generate-svg`, { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'SVG生成失敗');
+    alert('✅ SVGを生成しました。');
+    loadQuestions();
+  } catch (e) {
+    alert(`❌ ${e.message}`);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📐 SVG生成';
+  }
+}
+
+// ────────────────────────────────────────────────────────────────
+// Figure stats
+// ────────────────────────────────────────────────────────────────
+async function loadFigureStats() {
+  try {
+    const r    = await fetch('/api/admin/questions?limit=9999');
+    const data = await r.json();
+    const all  = data.items || [];
+    const hasFig  = all.filter(q => q.has_figure);
+    const withSvg = hasFig.filter(q => q.image_svg || q.image);
+    const pending = hasFig.filter(q => !q.image_svg && !q.image);
+
+    document.getElementById('figStatTotal').textContent   = hasFig.length;
+    document.getElementById('figStatDone').textContent    = withSvg.length;
+    document.getElementById('figStatPending').textContent = pending.length;
+
+    const card = document.getElementById('figureListCard');
+    if (pending.length > 0) {
+      card.style.display = 'block';
+      const list = document.getElementById('figureList');
+      list.innerHTML = pending.slice(0, 50).map(q => `
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+          <span style="background:var(--border);border-radius:4px;padding:2px 6px;font-size:11px">${q.category}</span>
+          <span style="color:var(--muted)">${q.year > 0 ? q.year+'年度' : ''} 問${q.no}</span>
+          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${q.question.slice(0,60)}…</span>
+          <button class="btn btn-outline btn-sm" onclick="generateSvg('${escId(q.id)}',this)">📐 個別生成</button>
+        </div>`).join('');
+      if (pending.length > 50)
+        list.innerHTML += `<p style="font-size:13px;color:var(--muted);text-align:center;margin-top:8px">他${pending.length - 50}件…</p>`;
+    } else {
+      card.style.display = 'none';
+    }
+  } catch (e) { console.error('図統計取得エラー:', e); }
+}
+
+
+// ────────────────────────────────────────────────────────────────
+// Preview renderer
+// ────────────────────────────────────────────────────────────────
+function showPreview(containerId, questions) {
+  const el = document.getElementById(containerId);
+  if (!questions || questions.length === 0) { el.classList.remove('visible'); return; }
+  el.innerHTML = questions.map(q => `
+    <div class="q-preview-item">
+      <div class="q-no">問${q.no}：${q.category}</div>
+      <div class="q-text">${escHtml(q.question)}</div>
+      <div class="q-choices">${(q.choices||[]).map((c,i)=>`${i+1}. ${escHtml(c)}`).join('<br>')}</div>
+      <div class="q-ans">✓ 正解：${q.answer}番</div>
+    </div>`).join('');
+  el.classList.add('visible');
+}
+
+// ────────────────────────────────────────────────────────────────
+// Utilities
+// ────────────────────────────────────────────────────────────────
+function showAlert(prefix, type, msg) {
+  const el = document.getElementById(`${prefix}${type === 'success' ? 'Success' : 'Error'}`);
+  el.textContent = msg;
+  el.classList.add('visible');
+}
+function hideAlerts(prefix) {
+  ['Success','Error'].forEach(s => {
+    const el = document.getElementById(`${prefix}${s}`);
+    if (el) el.classList.remove('visible');
+  });
+}
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function escId(id) { return String(id || '').replace(/'/g, "\\'"); }
+function encodeId(id) { return String(id || '').replace(/[^a-zA-Z0-9_-]/g, '_'); }
+function truncate(s, n) { return s.length > n ? s.slice(0,n)+'…' : s; }
+
+let searchTimer;
+function debounceSearch() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => { currentPage = 1; loadQuestions(); }, 400);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  const hash = location.hash.replace('#', '');
+  if (['generate','figures','manage'].includes(hash)) switchTab(hash);
+  loadBulkTargets();
+});
+</script>
+</body>
+</html>

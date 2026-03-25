@@ -1,0 +1,8 @@
+node_modules/
+.env
+data/pdf_cache/
+data/uploads/
+data/page_images/
+data/users/
+data/questions.json.backup_with_past
+*.pdf
