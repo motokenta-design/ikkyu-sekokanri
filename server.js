@@ -242,6 +242,37 @@ app.post('/api/user/:id/sync', (req, res) => {
   res.json({ ok: true, updatedAt: updated.updatedAt });
 });
 
+// ─── セッション紐付け進捗API（βコードで自動クロスデバイス同期）────────────────
+function getProgressPath(code) {
+  const hash = require('crypto').createHash('sha256').update(code || 'default').digest('hex').slice(0, 16);
+  return path.join(USERS_DIR, `prog_${hash}.json`);
+}
+
+app.get('/api/me/progress', (req, res) => {
+  if (!req.session?.authenticated) return res.status(401).json({ error: 'Unauthorized' });
+  try {
+    const data = JSON.parse(fs.readFileSync(getProgressPath(req.session.code || 'default'), 'utf8'));
+    res.json(data);
+  } catch {
+    res.json({ streak: 0, lastDate: null, sessions: [], totalCorrect: 0, totalAnswered: 0, weakIds: [], updatedAt: null });
+  }
+});
+
+app.post('/api/me/progress', (req, res) => {
+  if (!req.session?.authenticated) return res.status(401).json({ error: 'Unauthorized' });
+  const { streak, lastDate, sessions, totalCorrect, totalAnswered, weakIds } = req.body;
+  const data = {
+    streak: streak || 0, lastDate: lastDate || null,
+    sessions: sessions || [], totalCorrect: totalCorrect || 0,
+    totalAnswered: totalAnswered || 0, weakIds: weakIds || [],
+    updatedAt: new Date().toISOString(),
+  };
+  try {
+    fs.writeFileSync(getProgressPath(req.session.code || 'default'), JSON.stringify(data), 'utf8');
+    res.json({ ok: true, updatedAt: data.updatedAt });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ─── Admin: generate single batch ────────────────────────────────────────────
 app.post('/api/admin/generate', async (req, res) => {
   const { category, topic, count = 5 } = req.body;

@@ -489,21 +489,22 @@ nav button:hover{color:var(--primary)}
       <div id="weak-list" class="gap-8"></div>
     </div>
 
-    <div class="section-title mt-16">📱 デバイス間同期</div>
+    <div class="section-title mt-16">☁️ クラウド自動同期</div>
     <div class="card mb-16">
-      <div style="font-size:13px;color:var(--text-sub);margin-bottom:10px">同期コードで複数のスマホ・PCで学習データを共有できます</div>
-      <div style="font-size:12px;font-weight:600;margin-bottom:4px">あなたの同期コード</div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
-        <code id="sync-code" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px;font-size:10px;word-break:break-all;color:var(--text)">読み込み中…</code>
-        <button class="btn btn-outline" style="flex-shrink:0;padding:8px 12px" onclick="copySyncCode()">コピー</button>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <span style="font-size:32px;line-height:1">☁️</span>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:800;color:var(--text)">自動クラウド同期 ON</div>
+          <div style="font-size:12px;color:var(--text-sub);line-height:1.6;margin-top:3px">
+            βコードでログインするだけで<br>スマホ・PC・タブレット間でデータを自動共有
+          </div>
+        </div>
+        <div style="background:#d1fae5;color:#065f46;font-size:11px;font-weight:700;padding:5px 12px;border-radius:999px;white-space:nowrap">有効</div>
       </div>
-      <div style="font-size:12px;font-weight:600;margin-bottom:4px">他のデバイスから引き継ぐ</div>
-      <div style="display:flex;gap:8px">
-        <input id="import-code" type="text" placeholder="同期コードを貼り付け"
-          style="flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--bg);color:var(--text)">
-        <button class="btn btn-primary" style="flex-shrink:0" onclick="importFromCode()">取り込む</button>
+      <div style="background:var(--bg);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--text-sub);line-height:1.8">
+        📌 <strong>使い方：</strong>新しいデバイスで同じβコードを入力してログインするだけで、学習の続きが自動的に引き継がれます。
       </div>
-      <div id="sync-status" style="font-size:11px;color:var(--text-sub);margin-top:8px;text-align:right"></div>
+      <div id="sync-status" style="font-size:12px;margin-top:10px;text-align:right;padding-top:8px;border-top:1px solid var(--border)">—</div>
     </div>
 
     <div class="mt-16">
@@ -651,9 +652,7 @@ nav button:hover{color:var(--primary)}
 // State
 // ═══════════════════════════════════════════════════════
 const STORAGE_KEY = '1ks_study';
-const USER_KEY    = '1ks_user_id';
-let userId = null;
-let syncTimer = null;
+let syncTimer  = null;
 let lastSyncAt = null;
 
 function loadState() {
@@ -668,16 +667,14 @@ function defaultState() {
   return { streak: 0, lastDate: null, sessions: [], totalCorrect: 0, totalAnswered: 0, weakIds: [] };
 }
 
-// ─── Server sync ──────────────────────────────────────
+// ─── クラウド自動同期（βコード紐付け）────────────────────────
 function scheduleSyncToServer() {
-  if (!userId) return;
   clearTimeout(syncTimer);
   syncTimer = setTimeout(doSyncToServer, 1500);
 }
 async function doSyncToServer() {
-  if (!userId) return;
   try {
-    const r = await fetch(`/api/user/${userId}/sync`, {
+    const r = await fetch('/api/me/progress', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(state),
@@ -694,66 +691,34 @@ function updateSyncStatus() {
   if (!el) return;
   if (lastSyncAt) {
     const t = new Date(lastSyncAt).toLocaleTimeString('ja-JP');
-    el.textContent = `最終同期: ${t}`;
+    el.innerHTML = `☁️ 同期済み <strong>${t}</strong>`;
+    el.style.color = 'var(--success)';
+  } else {
+    el.textContent = '同期準備中...';
+    el.style.color = 'var(--text-sub)';
   }
 }
 
 async function initUser() {
-  userId = localStorage.getItem(USER_KEY);
-  if (!userId) {
-    try {
-      const r = await fetch('/api/user/new', { method: 'POST' });
-      const d = await r.json();
-      userId = d.userId;
-      localStorage.setItem(USER_KEY, userId);
-    } catch { return; }
-  }
-  // サーバーからデータ取得し、より多いほうを使用
+  // サーバーからβコード紐付けデータを取得
   try {
-    const r = await fetch(`/api/user/${userId}`);
+    const r = await fetch('/api/me/progress');
     if (r.ok) {
       const srv = await r.json();
       const local = loadState();
-      if ((srv.totalAnswered || 0) > local.totalAnswered) {
-        const { userId: _, createdAt, updatedAt, ...progress } = srv;
+      // サーバーとローカルの多い方を採用（サーバー優先で同数はサーバー側を使用）
+      if ((srv.totalAnswered || 0) >= (local.totalAnswered || 0) && srv.updatedAt) {
+        const { updatedAt, ...progress } = srv;
         state = progress;
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-        lastSyncAt = updatedAt;
-      } else {
-        // ローカルの方が新しい→サーバーへ反映
+        lastSyncAt = srv.updatedAt;
+      } else if ((local.totalAnswered || 0) > 0) {
+        // ローカルの方が新しい → サーバーへ即時反映
         scheduleSyncToServer();
       }
     }
   } catch {}
-  // 同期コード表示を更新（統計画面が既に開いている場合に対応）
-  const scEl = document.getElementById('sync-code');
-  if (scEl) scEl.textContent = userId;
   updateSyncStatus();
-}
-
-function copySyncCode() {
-  if (!userId) { toast('同期コードが取得できませんでした'); return; }
-  navigator.clipboard.writeText(userId).then(() => toast('同期コードをコピーしました ✅'));
-}
-
-async function importFromCode() {
-  const code = document.getElementById('import-code').value.trim();
-  if (!code) { toast('同期コードを入力してください'); return; }
-  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-  if (!UUID_RE.test(code)) { toast('無効な同期コードです'); return; }
-  if (!confirm('現在の学習データを上書きします。よろしいですか？')) return;
-  try {
-    const r = await fetch(`/api/user/${code}`);
-    if (!r.ok) { toast('データが見つかりませんでした'); return; }
-    const srv = await r.json();
-    const { userId: _, createdAt, updatedAt, ...progress } = srv;
-    userId = code;
-    localStorage.setItem(USER_KEY, userId);
-    state = progress;
-    saveState(state);
-    toast('データを引き継ぎました ✅');
-    renderStats();
-  } catch { toast('取り込みに失敗しました'); }
 }
 
 let homeSrcFilter  = 'all'; // 'all' | 'past' | 'ai'
@@ -1246,9 +1211,6 @@ function renderStats() {
     },
   });
 
-  // 同期コード表示
-  const sc = document.getElementById('sync-code');
-  if (sc) sc.textContent = userId || '読み込み中…';
   updateSyncStatus();
 
   const hl = document.getElementById('history-list');
@@ -1293,15 +1255,14 @@ async function confirmReset() {
   if (confirm('学習データをすべてリセットしますか？（元に戻せません）')) {
     localStorage.removeItem(STORAGE_KEY);
     state = defaultState();
-    if (userId) {
-      try {
-        await fetch(`/api/user/${userId}/sync`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(state),
-        });
-      } catch {}
-    }
+    lastSyncAt = null;
+    try {
+      await fetch('/api/me/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(state),
+      });
+    } catch {}
     toast('データをリセットしました');
     renderStats();
   }
