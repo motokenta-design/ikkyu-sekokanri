@@ -150,7 +150,14 @@ app.get('/api/health', (req, res) => {
 });
 
 app.get('/api/categories', (req, res) => {
-  res.json(['建築学', '共通工学', '施工管理法', '法規', '施工']);
+  const qs = loadQuestions();
+  const cats = ['建築学', '共通工学', '施工管理法', '法規', '施工'];
+  res.json({
+    categories: cats.map(name => ({
+      name,
+      count: qs.filter(q => q.category === name).length,
+    }))
+  });
 });
 
 // ─── Questions API ────────────────────────────────────────────────────────────
